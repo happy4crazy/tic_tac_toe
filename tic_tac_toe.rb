@@ -3,14 +3,15 @@
 class Board
   attr_reader :board
   def initialize
-    @board ||= Array.new(9)
+    @board ||= [0] * 9
+    @winner = nil
   end
 
   def play
     while unfinished? do
       draw
       human_turn
-      computer_turn if state.nil?
+      computer_turn if unfinished?
     end
     draw
     announce!
@@ -18,72 +19,85 @@ class Board
 
   private
   def unfinished?
-    state.nil?
+    check_for_winner!
+
+    @winner.nil?
+  end
+
+  def display_val(i)
+    case board[i]
+    when 0
+      i
+    when 1
+      'X'
+    when -1
+      'O'
+    end
   end
 
   def draw
     puts "   |   |   "
-    puts " " + (1..3).map {|i| board[i-1] || i}.join(" | ")
+    puts " " + (0..2).map {|i| display_val(i) || i}.join(" | ")
     puts "---|---|---"
-    puts " " + (4..6).map {|i| board[i-1] || i}.join(" | ")
+    puts " " + (3..5).map {|i| display_val(i) || i}.join(" | ")
     puts "---|---|---"
-    puts " " + (7..9).map {|i| board[i-1] || i}.join(" | ")
+    puts " " + (6..8).map {|i| display_val(i) || i}.join(" | ")
     puts "   |   |   "
   end
 
-  # This is gross, right?
-  # nil (unfished) | "tie" | ["win", who]
-  def state
-    s = nil
-    if !board[0].nil? &&    board[0] == board[1] && board[0] == board[2] 
-      s = ["win", board[0]]
-    elsif !board[0].nil? && board[0] == board[4] && board[0] == board[8] 
-      s = ["win", board[0]]
-    elsif !board[0].nil? && board[0] == board[3] && board[0] == board[6]
-      s = ["win", board[0]]
-    elsif !board[3].nil? && board[3] == board[4] && board[3] == board[5]
-      s = ["win", board[3]]
-    elsif !board[6].nil? && board[6] == board[7] && board[6] == board[8]
-      s = ["win", board[6]]
-    elsif !board[6].nil? && board[6] == board[4] && board[6] == board[2]
-      s = ["win", board[6]]
-    elsif !board[1].nil? && board[1] == board[4] && board[1] == board[7]
-      s = ["win", board[1]]
-    elsif !board[2].nil? && board[2] == board[5] && board[5] == board[8]
-      s = ["win", board[2]]
-    elsif not board.include? nil
-      s = "tie"
+  WIN_STATES = [[0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]]
+
+  # nil => unfished | 1 => X wins | -1 => O wins | 0 => tie
+  def check_for_winner!
+    WIN_STATES.each do |state|
+      sum = state.map { |pos| board[pos] }.reduce(:+)
+
+      if sum.abs == 3
+        @winner = sum / 3
+        break
+      end
     end
-    s
+
+    unless board.include?(0)
+      @winner = 0
+    end
+
+    @winner
   end
 
   def human_turn
       puts "Select your position: "
-      position = gets.chomp.to_i - 1
-      while board[position] do
+      position = gets.chomp.to_i
+      until board[position].zero? do
         puts "Nope. Try again: "
-        position = gets.chomp.to_i - 1
+        position = gets.chomp.to_i
       end
-      board[position] = "X"
+      board[position] = 1
   end
 
   def computer_turn
-    while board.include? nil do
+    computer_move = rand(9)
+    until board[computer_move].zero? do
       computer_move = rand(9)
-      if board[computer_move]
-        computer_move = rand(9)
-      else
-        board[computer_move] = "O"
-        break
-      end
     end
+    board[computer_move] = -1
   end
 
   def announce!
-    if state == "tie"
+    case @winner
+    when 0
       puts "You tied!"
-    else
-      puts "#{state[1]} won!"
+    when 1
+      puts "X won!"
+    when -1
+      puts "O won!"
     end
   end
 end
