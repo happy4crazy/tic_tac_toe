@@ -25,7 +25,7 @@ class Board
 
   private
   def unfinished?
-    check_for_winner!
+    @winner = check_for_winner
 
     @winner.nil?
   end
@@ -61,21 +61,23 @@ class Board
                 [2, 4, 6]]
 
   # nil => unfished | 1 => X wins | -1 => O wins | 0 => tie
-  def check_for_winner!
+  def check_for_winner
+    winner = nil
+
     WIN_STATES.each do |state|
       sum = state.map { |pos| board[pos] }.reduce(:+)
 
       if sum.abs == 3
-        @winner = sum / 3
+        winner = sum / 3
         break
       end
     end
 
     unless board.include?(0)
-      @winner = 0
+      winner = 0
     end
 
-    @winner
+    winner
   end
 
   def human_turn
