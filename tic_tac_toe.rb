@@ -3,7 +3,7 @@
 class Board
   attr_reader :board
   def initialize
-    @board ||= [0] * 9
+    @board = [0] * 9
     @winner = nil
     @human_turn = true
   end
