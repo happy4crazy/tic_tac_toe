@@ -5,13 +5,19 @@ class Board
   def initialize
     @board ||= [0] * 9
     @winner = nil
+    @human_turn = true
   end
 
   def play
     while unfinished? do
-      draw
-      human_turn
-      computer_turn if unfinished?
+      if @human_turn
+        draw
+        human_turn
+      else
+        computer_turn
+      end
+
+      @human_turn = !@human_turn
     end
     draw
     announce!
